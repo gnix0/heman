@@ -1,65 +1,104 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define HEAP_CAPACITY 640000
-#define HEAP_ALLOCATED_CAPACITY 1024
+#define CHUNK_LIST_CAPACITY 1024
+
+#define UNIMPLEMENTED \
+    do { \
+        fprintf(stderr, "%s:%d: TODO: %s is not implemented yet\n", \
+                __FILE__, __LINE__, __func__); \
+        abort(); \
+    } while(0)
 
 typedef struct {
     void *start;
     size_t size;
-} Heap_Chunk;
+} Chunk;
 
-char heap[HEAP_CAPACITY] = {0};
-Heap_Chunk heap_allocated[HEAP_ALLOCATED_CAPACITY] = {0};
-size_t heap_size = 0;
-size_t heap_allocated_size = 0;
+typedef struct {
+    size_t count;
+    Chunk chunks [CHUNK_LIST_CAPACITY];
+} Chunk_List;
 
-void *heap_alloc(size_t size)
+int chunk_list_find(const Chunk_List *list, void *ptr)
 {
-    assert(heap_size + size <= HEAP_CAPACITY);
-    void *result = heap + heap_size;
-    heap_size += size;
-
-    const Heap_Chunk chunk = {
-        .start = result,
-        .size = size,
-    };
-
-    assert(heap_allocated_size < HEAP_ALLOCATED_CAPACITY);
-    heap_allocated[heap_allocated_size++] = chunk;
-
-    return result;
+    (void) list;
+    (void) ptr;
+    UNIMPLEMENTED;
+    return -1;
 }
 
-void heap_dump_allocated_chunks(void)
+void chunk_list_dump(const Chunk_List *list)
 {
-    printf("Allocated Chunks (%zu):\n", heap_allocated_size);
-    for (size_t i = 0; i < heap_allocated_size; ++i) {
+    printf("Chunks (%zu):\n", list->count);
+    for (size_t i = 0; i < list->count; ++i) {
         printf("  start: %p, size: %zu\n",
-        heap_allocated[i].start,
-        heap_allocated[i].size);
+               list->chunks[i].start,
+               list->chunks[i].size);
     }
 }
 
+void chunk_list_insert(Chunk_List *list, void *start, size_t size)
+{
+    assert(list->count < CHUNK_LIST_CAPACITY);
+    list->chunks[list->count].start = start;
+    list->chunks[list->count].size = size;
+
+    (void) list;
+    (void) start;
+    (void) size;
+    UNIMPLEMENTED;
+}
+
+void chunk_list_remove(Chunk_List *list, size_t index)
+{
+    (void) list;
+    (void) index;
+    UNIMPLEMENTED;
+}
+
+char heap[HEAP_CAPACITY] = {0};
+size_t heap_size = 0;
+
+Chunk_List allocated_chunks = {0};
+Chunk_List freed_chunks = {0};
+
+void *heap_alloc(size_t size)
+{
+    if (size == 0) {
+        return NULL;
+    }
+
+    assert(heap_size + size <= HEAP_CAPACITY);
+    void *ptr = heap + heap_size;
+    heap_size += size;
+
+    return ptr;
+}
+
+// O(allocated_chunks)
 void heap_free(void *ptr)
 {
     (void) ptr;
-    assert(false && "TODO: heap_free is not implemented yet");
+    UNIMPLEMENTED;
 }
 
 void heap_collect()
 {
-    assert(false && "TODO: heap_free is not implemented yet");
+    UNIMPLEMENTED;
 }
 
 int main(void)
 {
     for (size_t i = 0; i < 100; ++i) {
-        heap_alloc(i);
+        void *p = heap_alloc(i);
+        if (i % 2 == 0) {
+            heap_free(p);
+        }
     }
-
-    heap_dump_allocated_chunks();
 
     return 0;
 }
