@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #define HEAP_CAPACITY 640000
-#define CHUNK_LIST_CAPACITY 1024
+#define POBJECT_LIST_CAPACITY 1024
 
 #define UNIMPLEMENTED \
     do { \
@@ -16,14 +16,14 @@
 typedef struct {
     void *start;
     size_t size;
-} Chunk;
+} PObject;
 
 typedef struct {
     size_t count;
-    Chunk chunks [CHUNK_LIST_CAPACITY];
-} Chunk_List;
+    PObject pobjects [POBJECT_LIST_CAPACITY];
+} PObject_List;
 
-int chunk_list_find(const Chunk_List *list, void *ptr)
+int pobject_list_find(const PObject_List *list, void *ptr)
 {
     (void) list;
     (void) ptr;
@@ -31,34 +31,34 @@ int chunk_list_find(const Chunk_List *list, void *ptr)
     return -1;
 }
 
-void chunk_list_dump(const Chunk_List *list)
+void pobject_list_dump(const PObject_List *list)
 {
-    printf("Chunks (%zu):\n", list->count);
+    printf("PObjects (%zu):\n", list->count);
     for (size_t i = 0; i < list->count; ++i) {
         printf("  start: %p, size: %zu\n",
-               list->chunks[i].start,
-               list->chunks[i].size);
+               list->pobjects[i].start,
+               list->pobjects[i].size);
     }
 }
 
-void chunk_list_insert(Chunk_List *list, void *start, size_t size)
+void pobject_list_insert(PObject_List *list, void *start, size_t size)
 {
-    assert(list->count < CHUNK_LIST_CAPACITY);
-    list->chunks[list->count].start = start;
-    list->chunks[list->count].size = size;
+    assert(list->count < POBJECT_LIST_CAPACITY);
+    list->pobjects[list->count].start = start;
+    list->pobjects[list->count].size = size;
 
     for (size_t i = list->count; i > 0
-            && list->chunks[i].start < list->chunks[i - 1].start;
+            && list->pobjects[i].start < list->pobjects[i - 1].start;
             --i) {
-        const Chunk t = list->chunks[i];
-        list->chunks[i] = list->chunks[i - 1];
-        list->chunks[i - 1] = t;
+        const PObject t = list->pobjects[i];
+        list->pobjects[i] = list->pobjects[i - 1];
+        list->pobjects[i - 1] = t;
     }
 
     list->count += 1;
 }
 
-void chunk_list_remove(Chunk_List *list, size_t index)
+void pobject_list_remove(PObject_List *list, size_t index)
 {
     (void) list;
     (void) index;
@@ -68,8 +68,8 @@ void chunk_list_remove(Chunk_List *list, size_t index)
 char heap[HEAP_CAPACITY] = {0};
 size_t heap_size = 0;
 
-Chunk_List allocated_chunks = {0};
-Chunk_List freed_chunks = {0};
+PObject_List allocated_pobjects = {0};
+PObject_List freed_pobjects = {0};
 
 void *heap_alloc(size_t size)
 {
@@ -80,12 +80,12 @@ void *heap_alloc(size_t size)
     assert(heap_size + size <= HEAP_CAPACITY);
     void *ptr = heap + heap_size;
     heap_size += size;
-    chunk_list_insert(&allocated_chunks, ptr, size);
+    pobject_list_insert(&allocated_pobjects, ptr, size);
 
     return ptr;
 }
 
-// O(allocated_chunks)
+// O(allocated_pobjects)
 void heap_free(void *ptr)
 {
     (void) ptr;
@@ -106,6 +106,6 @@ int main(void)
         // }
     }
 
-    chunk_list_dump(&allocated_chunks);
+    pobject_list_dump(&allocated_pobjects);
     return 0;
 }
